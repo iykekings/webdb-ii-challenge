@@ -22,7 +22,12 @@ const updateCar = (id, payload) =>
   db('cars')
     .where({ id })
     .update(payload)
-    .then(res => getCars(id));
+    .then(res => (res > 0 ? getCars(id) : null));
+
+const deleteCar = id =>
+  db('cars')
+    .where({ id })
+    .del();
 
 // db helpers end
 
@@ -32,9 +37,18 @@ server.get('/', async (req, res) => {
 });
 
 server.get('/:id', async (req, res) => {
-  const cars = await getCars(req.params.id);
-  res.status(200).json(cars);
+  try {
+    const car = await getCars(req.params.id);
+    if (car) {
+      res.status(200).json(car);
+    } else {
+      res.status(400).json({ message: 'No car with that id' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Cannot retrieve the car details' });
+  }
 });
+
 server.post('/', async (req, res) => {
   const { VIN, model, make, mileage } = req.body;
   if ((VIN, model, make, mileage)) {
@@ -45,6 +59,7 @@ server.post('/', async (req, res) => {
     .status(400)
     .json({ message: 'Please provide VIN, model, make, mileage for the car' });
 });
+
 server.put('/:id', async (req, res) => {
   const payload = req.body;
   if (Object.keys(payload).length) {
@@ -52,6 +67,15 @@ server.put('/:id', async (req, res) => {
     res.status(200).json(updatedCar);
   }
   res.status(400).json({ message: 'The update payload must not be empty' });
+});
+
+server.delete('/:id', async (req, res) => {
+  const deleted = await deleteCar(req.params.id);
+  if (deleted) {
+    res.status(200).json({ message: 'Car deleted successfully' });
+  } else {
+    res.status(400).json({ message: 'No car with that id' });
+  }
 });
 
 server.listen(4000, () => {
