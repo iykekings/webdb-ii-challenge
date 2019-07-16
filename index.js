@@ -17,6 +17,11 @@ server.get('/', async (req, res) => {
   res.status(200).json(cars);
 });
 
+server.get('/:id', async (req, res) => {
+  const cars = await getCars(req.params.id);
+  res.status(200).json(cars);
+});
+
 server.listen(4000, () => {
   console.log('Server running on port 4000');
 });
